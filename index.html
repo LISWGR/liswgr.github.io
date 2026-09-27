@@ -1,0 +1,308 @@
+<title>LISWGR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d12;
+    --bg-soft:#12151c;
+    --card:#161a23;
+    --border:#242a37;
+    --text:#e8eaf0;
+    --text-dim:#9aa3b5;
+    --accent:#5b8cff;
+    --accent-soft:#5b8cff22;
+    --accent2:#7ee8d0;
+    --radius:14px;
+    --maxw:920px;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding-inline:24px; padding-block:64px 96px;}
+
+  header.title-block{text-align:center; margin-bottom:40px;}
+  .venue{
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--accent2);
+    margin-bottom:18px;
+  }
+  h1.paper-title{
+    font-family:'Fraunces',Georgia,serif;
+    font-size:clamp(28px,4vw,40px);
+    font-weight:600;
+    text-wrap:balance;
+    margin:0 0 20px;
+    color:#fff;
+  }
+  .placeholder{
+    color:var(--text-dim);
+    font-style:italic;
+  }
+  .authors{
+    font-size:15px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+  }
+  .anon-note{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.03em;
+    color:var(--accent2);
+    background:#7ee8d014;
+    border:1px solid #7ee8d033;
+    padding:6px 14px;
+    border-radius:999px;
+    margin-top:10px;
+  }
+
+  .links-row{
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    flex-wrap:wrap;
+    margin:32px 0 8px;
+  }
+  .pill{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 20px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--text);
+    text-decoration:none;
+    font-size:14px;
+    font-weight:500;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .pill:hover{border-color:var(--accent); transform:translateY(-1px);}
+  .pill svg{width:16px; height:16px; flex-shrink:0;}
+  .pill.disabled{color:var(--text-dim); cursor:default;}
+  .pill.disabled:hover{transform:none; border-color:var(--border);}
+
+  section{margin-top:72px;}
+  h2.section-title{
+    font-size:13px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--accent2);
+    margin:0 0 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  h2.section-title::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--border);
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:32px;
+  }
+
+  .abstract p{font-size:17px; color:#dfe2ea; max-width:65ch;}
+
+  /* ---- Method animation ---- */
+  .pipeline-card{padding:36px 24px;}
+  .pipeline-caption{
+    font-size:13px;
+    color:var(--text-dim);
+    text-align:center;
+    margin-top:18px;
+  }
+  svg#pipeline{width:100%; height:auto; display:block;}
+  .node-box{fill:var(--bg-soft); stroke:var(--border); stroke-width:1.5;}
+  .node-label{font-size:12.5px; fill:var(--text);}
+  .node-sub{font-size:10px; fill:var(--text-dim);}
+  .flow-line{fill:none; stroke:var(--border); stroke-width:2;}
+  .flow-dot{fill:var(--accent); filter:drop-shadow(0 0 4px var(--accent));}
+
+  /* ---- Video ---- */
+  .video-frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    max-width:100%;
+    border-radius:10px;
+    background:radial-gradient(circle at 50% 45%, #1c2130 0%, #10131a 70%);
+    border:1px dashed var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .video-frame .play-btn{
+    width:64px; height:64px;
+    border-radius:50%;
+    background:var(--accent-soft);
+    border:1px solid var(--accent);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .video-frame .play-btn svg{width:22px; height:22px; fill:var(--accent); margin-left:3px;}
+  .video-caption{text-align:center; font-size:13px; color:var(--text-dim); margin-top:14px;}
+
+  /* ---- Code ---- */
+  .code-card{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:20px;
+  }
+  .code-card .desc{max-width:520px; color:var(--text-dim); font-size:14.5px;}
+  .code-card .desc code{
+    font-family:'IBM Plex Mono',monospace;
+    background:#0000004d;
+    padding:2px 6px;
+    border-radius:5px;
+    font-size:13px;
+    color:var(--accent2);
+  }
+
+  footer{
+    margin-top:96px;
+    text-align:center;
+    font-size:12.5px;
+    color:var(--text-dim);
+  }
+
+  @media (max-width:600px){
+    .wrap{padding-inline:18px; padding-block:40px 64px;}
+    section{margin-top:52px;}
+    .card{padding:22px;}
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="title-block">
+    <div class="venue">LISWGR &nbsp;·&nbsp; Submission to IEEE Transactions on Automation Science and Engineering</div>
+    <h1 class="paper-title">Learning-Informed Motion Planning Toward Scored Workspace Goal Regions for Object Manipulation in Constrained Environments</h1>
+    <div class="authors">Anonymous Author(s)</div>
+    <div class="anon-note">Anonymous submission — under double-blind review</div>
+
+    <div class="links-row">
+      <a class="pill disabled" href="#" onclick="return false;">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 7V3.5L19.5 9H14z"/></svg>
+        Paper (PDF) — coming soon
+      </a>
+      <a class="pill" href="https://github.com/LISWGR" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 15l-3-3 3-3v2h4V9l3 3-3 3v-2h-4v2z"/></svg>
+        Code
+      </a>
+      <a class="pill disabled" href="#" onclick="return false;">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+        Video — coming soon
+      </a>
+    </div>
+  </header>
+
+  <!-- ABSTRACT -->
+  <section class="abstract">
+    <h2 class="section-title">Abstract</h2>
+    <div class="card">
+      <p class="placeholder">
+        Replace this paragraph with your paper's abstract. Keep it to a single, self-contained
+        paragraph — no citations, no author-identifying references, no acknowledgements.
+      </p>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="method">
+    <h2 class="section-title">Method</h2>
+    <div class="card pipeline-card">
+      <svg id="pipeline" viewBox="0 0 780 200" xmlns="http://www.w3.org/2000/svg">
+        <path class="flow-line" d="M 130 100 L 260 100"/>
+        <path class="flow-line" d="M 390 100 L 520 100"/>
+        <path class="flow-line" d="M 650 100 L 700 100"/>
+
+        <circle class="flow-dot" r="4">
+          <animateMotion dur="2.4s" repeatCount="indefinite" path="M 130 100 L 260 100"/>
+        </circle>
+        <circle class="flow-dot" r="4">
+          <animateMotion dur="2.4s" begin="0.6s" repeatCount="indefinite" path="M 390 100 L 520 100"/>
+        </circle>
+        <circle class="flow-dot" r="4">
+          <animateMotion dur="1.2s" begin="1.2s" repeatCount="indefinite" path="M 650 100 L 700 100"/>
+        </circle>
+
+        <rect class="node-box" x="10" y="60" width="120" height="80" rx="10"/>
+        <text class="node-label" x="70" y="96" text-anchor="middle">Input Scene</text>
+        <text class="node-sub" x="70" y="112" text-anchor="middle">[ e.g. shelf + target ]</text>
+
+        <rect class="node-box" x="260" y="52" width="130" height="96" rx="10"/>
+        <text class="node-label" x="325" y="92" text-anchor="middle">Stage 1</text>
+        <text class="node-sub" x="325" y="108" text-anchor="middle">[ your method's</text>
+        <text class="node-sub" x="325" y="120" text-anchor="middle">first stage ]</text>
+
+        <rect class="node-box" x="520" y="52" width="130" height="96" rx="10"/>
+        <text class="node-label" x="585" y="92" text-anchor="middle">Stage 2</text>
+        <text class="node-sub" x="585" y="108" text-anchor="middle">[ your method's</text>
+        <text class="node-sub" x="585" y="120" text-anchor="middle">second stage ]</text>
+
+        <rect class="node-box" x="700" y="60" width="70" height="80" rx="10"/>
+        <text class="node-label" x="735" y="96" text-anchor="middle">Plan</text>
+        <text class="node-sub" x="735" y="112" text-anchor="middle">output</text>
+      </svg>
+      <div class="pipeline-caption placeholder">
+        Replace node labels/positions with your actual pipeline (e.g. reachability-aware
+        scoring → diffusion-based path sampling → executed trajectory). This is an animated
+        SVG — no video file needed for this part.
+      </div>
+    </div>
+  </section>
+
+  <!-- VIDEO -->
+  <section class="video">
+    <h2 class="section-title">Video</h2>
+    <div class="card">
+      <div class="video-frame">
+        <div class="play-btn">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      <div class="video-caption placeholder">
+        Replace this block with an &lt;iframe&gt; (hosted on an anonymized video link) or a
+        self-hosted &lt;video&gt; tag once your clip is ready and anonymized.
+      </div>
+    </div>
+  </section>
+
+  <!-- CODE -->
+  <section class="code">
+    <h2 class="section-title">Code</h2>
+    <div class="card code-card">
+      <div class="desc placeholder">
+        Code will be released under the <code>LISWGR</code> organization once the
+        implementation repository is public.
+      </div>
+      <a class="pill" href="https://github.com/LISWGR" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 15l-3-3 3-3v2h4V9l3 3-3 3v-2h-4v2z"/></svg>
+        View Code
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    Anonymous project page — prepared for double-blind review.<br>
+    Replace all bracketed placeholders before submission/upload.
+  </footer>
+
+</div>
