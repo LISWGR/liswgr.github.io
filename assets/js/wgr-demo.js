@@ -282,6 +282,8 @@
   var algos = [].slice.call(root.querySelectorAll('.algo'));
   var playBtn = root.querySelector('.demo-play');
   var replayBtn = root.querySelector('.demo-replay');
+  var backBtn = root.querySelector('.demo-back');
+  var fwdBtn = root.querySelector('.demo-fwd');
   var scrub = root.querySelector('.demo-scrub');
   var readout = root.querySelector('.demo-readout');
 
@@ -401,7 +403,7 @@
     var regs = scene.regions, n = regs.length;
     var boxA = clamp01(p / 0.15);
     regs.forEach(function (r, i) {
-      var scoreA = clamp01(((p - 0.2) / 0.3) * n - i);
+      var scoreA = clamp01(((p - 0.2) / 0.3) * n - i - 1e-6);
       drawRegion(r, boxA, scoreA);
       var shown = Math.round(r.goals.length * clamp01((p - 0.7) / 0.25));
       for (var g = 0; g < shown; g++) square(r.goals[g], 3 * k, r.color, 0.95);
@@ -420,7 +422,6 @@
           var nz = g.noise[pi][i], jt = g.jit[pi][i];
           return { x: nz.x + (tgt.x - nz.x) * e + jt.x * (1 - e), y: nz.y + (tgt.y - nz.y) * e + jt.y * (1 - e) };
         });
-        polyline(pts, color, 1.1 * k, 0.08 + 0.3 * e);
         for (var i = 1; i < pts.length - 1; i++) dot(pts[i], 2.2 * k, color, 0.35 + 0.55 * e);
       });
     });
@@ -511,7 +512,7 @@
     setLines(lines);
     var n = scene.regions.length;
     var rows = scene.regions.map(function (r, i) {
-      var sa = clamp01(((p - 0.2) / 0.3) * n - i);
+      var sa = clamp01(((p - 0.2) / 0.3) * n - i - 1e-6);
       var shown = Math.round(r.goals.length * clamp01((p - 0.7) / 0.25));
       return '<tr><td>' + swatch(r.color) + 'WGR<sub>' + (i + 1) + '</sub></td>' +
         '<td><span class="bar"><span style="width:' + (r.score * ease(sa) * 100).toFixed(1) + '%;background:' + reachColor(r.score) + '"></span></span>' +
@@ -567,6 +568,37 @@
   }
 
   function stepLength() { return state.step === 3 ? scene.tree.iters.length : 1; }
+
+  // Positions the ◀ / ▶ buttons stop at. Step 1: one pseudo-code stage (one per region while scoring);
+  // step 2: one DDIM step; step 3: one planner iteration (handled directly in stepBy).
+  var stops = { 1: null, 2: null };
+  function buildStops() {
+    var n = scene.regions.length, s1 = [0, 0.2];
+    for (var i = 1; i <= n; i++) s1.push(0.2 + 0.3 * i / n);
+    stops[1] = s1.concat([0.6, 0.7, 1]);
+    var s2 = [0, 0.12];                                   // x_T, then one stop per DDIM step
+    for (var t = DDIM_STEPS - 1; t >= 0; t--) {
+      var target = 1 - t / DDIM_STEPS, lo = 0, hi = 1;    // invert the easing: e(u) = target
+      for (var it = 0; it < 30; it++) { var mid = (lo + hi) / 2; if (ease(mid) < target) lo = mid; else hi = mid; }
+      s2.push(0.12 + 0.8 * hi);
+    }
+    stops[2] = s2.concat([1]);
+  }
+  function stepBy(dir) {
+    if (!scene) return;
+    var t = state.t, eps = 1e-6;
+    if (state.step === 3) {
+      t = dir > 0 ? Math.floor(t + eps) + 1 : Math.ceil(t - eps) - 1;
+      t = Math.max(0, Math.min(stepLength(), t));
+    } else {
+      var list = stops[state.step], next = dir > 0 ? 1 : 0;
+      if (dir > 0) { for (var i = 0; i < list.length; i++) if (list[i] > t + eps) { next = list[i]; break; } }
+      else { for (var j = list.length - 1; j >= 0; j--) if (list[j] < t - eps) { next = list[j]; break; } }
+      t = next;
+    }
+    state.t = t; state.hold = 0; state.playing = false; state.tour = false;
+    syncPlayUI(); draw();
+  }
   function progress() { return scene ? state.t / stepLength() : 0; }
 
   /* ================= control ================= */
@@ -645,6 +677,13 @@
     syncPlayUI();
     schedule();
   });
+  backBtn.addEventListener('click', function () { stepBy(-1); });
+  fwdBtn.addEventListener('click', function () { stepBy(1); });
+  root.addEventListener('keydown', function (e) {        // ← / → step while focus is on the demo controls
+    if (e.target === scrub || !e.target.closest('.demo-controls')) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); stepBy(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stepBy(1); }
+  });
   replayBtn.addEventListener('click', function () {
     state.t = 0; state.hold = 0; state.playing = true;
     syncPlayUI(); draw(); schedule();
@@ -661,6 +700,7 @@
   function start() {
     if (!scene) {
       scene = buildScene();
+      buildStops();
       readPalette();
       syncStepUI();
       resize();
