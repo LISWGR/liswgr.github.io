@@ -15,10 +15,10 @@ links:
     url:
   - label: Code
     icon: code
-    url: https://github.com/LISWGR
+    url: https://github.com/LISWGR/LISWGR
   - label: Video
     icon: video
-    url:
+    url: "#video"   # in-page links (starting with #) open in the same tab
 
 abstract: >-
   Replace this paragraph with your paper's abstract. Keep it to a single, self-contained
@@ -26,8 +26,13 @@ abstract: >-
 abstract_placeholder: true   # set to false once the real abstract is in
 
 code:
-  url: https://github.com/LISWGR
-  org: LISWGR
+  url: https://github.com/LISWGR/LISWGR
+  repo: LISWGR/LISWGR
+
+# YouTube video id (the part after watch?v=). Leave empty to show a placeholder.
+video:
+  youtube_id: Qg5pN48UHvQ
+  title: Project video
 
 footer: |-
   Anonymous project page — prepared for double-blind review.<br>

@@ -1,14 +1,23 @@
-<section class="video">
+{%- assign video = site.data.paper.video -%}
+<section class="video" id="video">
   <h2 class="section-title">Video</h2>
   <div class="card">
+    {%- if video.youtube_id %}
+    <div class="video-frame video-embed">
+      <iframe src="https://www.youtube-nocookie.com/embed/{{ video.youtube_id }}?rel=0"
+              title="{{ video.title | default: 'Project video' }}"
+              loading="lazy"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen></iframe>
+    </div>
+    {%- else %}
     <div class="video-frame">
       <div class="play-btn">
         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       </div>
     </div>
-    <div class="video-caption placeholder">
-      Replace this block with an &lt;iframe&gt; (hosted on an anonymized video link) or a
-      self-hosted &lt;video&gt; tag once your clip is ready and anonymized.
-    </div>
+    <div class="video-caption placeholder">Video coming soon.</div>
+    {%- endif %}
   </div>
 </section>

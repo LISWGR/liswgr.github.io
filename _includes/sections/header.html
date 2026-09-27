@@ -10,7 +10,7 @@
   <div class="links-row">
     {%- for link in paper.links %}
     {%- if link.url %}
-    <a class="pill" href="{{ link.url }}" target="_blank" rel="noopener">
+    <a class="pill" href="{{ link.url }}"{% unless link.url contains "#" %} target="_blank" rel="noopener"{% endunless %}>
       {% include icon.html name=link.icon %}
       {{ link.label }}
     </a>
