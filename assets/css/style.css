@@ -202,7 +202,7 @@ h2.section-title::after{
   padding:32px;
 }
 
-.abstract p{font-size:17px; color:var(--text-body); max-width:65ch;}
+.abstract p{font-size:17px; color:var(--text-body); margin:0; text-align:justify; hyphens:auto; -webkit-hyphens:auto;}
 
 /* ---- Method: overview figure + demo + pseudo-code ---- */
 .method-wide{
