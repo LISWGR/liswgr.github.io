@@ -1,0 +1,65 @@
+<!-- Training: the encoder is trained first, frozen, and its embedding feeds the two learned models.
+     .frozen-mark boxes are positioned in % of each figure (--x, --y, --w, --h); the connector
+     arrows are drawn by assets/js/training.js from the .link-src / .link-dst marks. -->
+{%- assign img = '/assets/img/training/' | relative_url -%}
+<section class="training method-wide" id="training">
+  <h2 class="section-title">Training</h2>
+  <p class="training-intro">
+    The environment encoder is trained first with a reconstruction objective and then
+    <b>frozen</b>. Its embedding <i>z</i><sub>env</sub> is shared by the two learned components,
+    which are trained separately on top of it.
+  </p>
+
+  <div class="train-diagram" id="train-diagram">
+    <figure class="train-fig train-env">
+      <figcaption class="train-head"><span class="train-num">1</span>Environment encoder<span class="train-tag">reconstruction</span></figcaption>
+      <button type="button" class="train-img" data-zoom aria-label="Enlarge environment encoder figure">
+        <span class="train-frame">
+          <img src="{{ img }}env-encoder.svg" alt="Hybrid CNN–Transformer encoders for RGB and depth, fused into the environment embedding z_env." loading="lazy">
+          <span class="frozen-mark link-src" style="--x:85%;--y:39%;--w:14.6%;--h:24.5%"><span class="frozen-chip">z<sub>env</sub></span></span>
+        </span>
+      </button>
+      <p class="train-cap">RGB and depth pass through two identical CNN–Transformer encoders, fused into
+        <i>z</i><sub>env</sub>. Each is trained with a convolutional decoder to reconstruct its input;
+        the decoders are then discarded.</p>
+    </figure>
+
+    <div class="train-split" aria-hidden="true"><span>❄ frozen <i>z</i><sub>env</sub></span></div>
+
+    <div class="train-right">
+      <figure class="train-fig">
+        <figcaption class="train-head"><span class="train-num">2</span>Reachability scoring model<span class="train-tag">focal + smooth L1</span></figcaption>
+        <button type="button" class="train-img" data-zoom aria-label="Enlarge scoring model figure">
+          <span class="train-frame">
+            <img src="{{ img }}scoring-model.svg" alt="Scoring model: frozen encoders and WGR parameters feed a shared MLP with grasp success and grasp quality heads." loading="lazy">
+            <span class="frozen-mark link-dst" style="--x:4.2%;--y:0.5%;--w:29.8%;--h:46%"><span class="frozen-chip">❄ frozen</span></span>
+          </span>
+        </button>
+        <p class="train-cap"><i>z</i><sub>env</sub> and the <i>WGR</i> parameters feed a shared MLP. The grasp
+          success head gives the reachability score <i>s</i><sub>i</sub> (focal loss); the grasp quality head
+          is trained with smooth L1 on reachable regions only.</p>
+      </figure>
+
+      <figure class="train-fig">
+        <figcaption class="train-head"><span class="train-num">3</span>Diffusion path sampler<span class="train-tag">noise MSE</span></figcaption>
+        <button type="button" class="train-img" data-zoom aria-label="Enlarge diffusion model figure">
+          <span class="train-frame">
+            <img src="{{ img }}diffusion-model.svg" alt="Diffusion model: a Conv1D denoiser conditioned on q_s, q_g, z_env and the timestep via FiLM; DDIM sampling produces path samples." loading="lazy">
+            <span class="frozen-mark link-dst" style="--x:8.4%;--y:0.3%;--w:27.2%;--h:43.5%"><span class="frozen-chip">❄ frozen</span></span>
+          </span>
+        </button>
+        <p class="train-cap">A Conv1D denoiser conditioned on <i>q</i><sub>s</sub>, <i>q</i><sub>g</sub>,
+          <i>z</i><sub>env</sub> and the timestep <i>t</i> through FiLM predicts the added noise (MSE);
+          DDIM sampling turns it into path samples.</p>
+      </figure>
+    </div>
+
+    <svg class="train-links" aria-hidden="true"></svg>
+  </div>
+
+  <dialog class="zoom" id="train-zoom">
+    <form method="dialog"><button class="zoom-close" aria-label="Close">×</button></form>
+    <img alt="">
+  </dialog>
+</section>
+<script src="{{ '/assets/js/training.js' | relative_url }}" defer></script>

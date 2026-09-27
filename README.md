@@ -13,6 +13,7 @@ Jekyll site served by GitHub Pages (no build step needed — GitHub builds on pu
 | `_includes/method/steps.html` | Title + description per demo step |
 | `_includes/method/algorithms.html` | Pseudo-code per step; `data-l` ids are the lines the animation highlights |
 | `assets/js/wgr-demo.js` | Method animation (scene, planner simulation, drawing) |
+| `_includes/sections/training.html` | Training figures + frozen-encoder arrows (`assets/js/training.js`); figures live in `assets/img/training/` |
 | `_layouts/default.html` | Shared frame: `<head>`, theme toggle, footer |
 | `assets/css/style.css` | All styles; light/dark colors are the tokens at the top |
 | `assets/js/theme.js` | Light/dark toggle (default: light) |

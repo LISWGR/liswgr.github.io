@@ -21,9 +21,23 @@ links:
     url: "#video"   # in-page links (starting with #) open in the same tab
 
 abstract: >-
-  Replace this paragraph with your paper's abstract. Keep it to a single, self-contained
-  paragraph — no citations, no author-identifying references, no acknowledgements.
-abstract_placeholder: true   # set to false once the real abstract is in
+  Motion planning for pick-and-place manipulation is particularly challenging in constrained
+  environments such as shelves and cabinets, where surrounding structures and closely arranged
+  objects limit feasible motions and create narrow passages in the configuration space. Such tasks
+  admit multiple candidate end-effector poses, but these are not equally reachable, and a planner
+  that cannot tell them apart in advance wastes effort on infeasible candidates. Even for a
+  reachable candidate, finding a path remains difficult, as valid configurations are sparse within
+  these passages. We propose a reachability-aware, diffusion-informed planning framework: a learned
+  model scores the reachability of each candidate grasp pose to guide goal selection, while a
+  diffusion model generates informed path samples that steer the search toward feasible solutions.
+  Both guide a sampling-based tree planner while preserving part of its uniform exploration. We
+  evaluate the method in scenarios of increasing complexity, from simulation to a real 7-DoF Franka
+  Emika robot in cluttered shelves. It achieves higher success rates than classical,
+  workspace-goal-region-aware, and state-of-the-art learning-based planners, generating paths more
+  than three times faster than the strongest baseline and the shortest paths among all evaluated
+  methods. It further generalizes to shelf arrangements not seen during training and transfers to
+  the real robot without fine-tuning.
+abstract_placeholder: false  # true renders the abstract in italic placeholder style
 
 code:
   url: https://github.com/LISWGR/LISWGR
