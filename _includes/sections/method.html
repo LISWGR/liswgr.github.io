@@ -1,0 +1,43 @@
+<section class="method method-wide">
+  <h2 class="section-title">Method</h2>
+  <div class="card method-card" id="wgr-demo">
+
+    <div class="method-fig">
+      <div class="fig-hint">Click a colored block</div>
+      {% include method/overview.html %}
+    </div>
+
+    <div class="method-demo">
+      <div class="demo-tabs" role="tablist" aria-label="Pipeline step">
+        <button type="button" role="tab" data-step="1">1 · Scoring</button>
+        <button type="button" role="tab" data-step="2">2 · Diffusion</button>
+        <button type="button" role="tab" data-step="3">3 · Tree expansion</button>
+      </div>
+      {% include method/steps.html %}
+      <div class="demo-stage">
+        <canvas class="demo-canvas" aria-label="Animated 2D planning example"></canvas>
+      </div>
+      <div class="demo-controls">
+        <button type="button" class="demo-btn demo-play" aria-label="Pause">
+          <svg class="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+          <svg class="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button type="button" class="demo-btn demo-replay" aria-label="Replay step">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg>
+        </button>
+        <input class="demo-scrub" type="range" min="0" max="1000" value="0" aria-label="Animation progress">
+      </div>
+      <div class="demo-readout" aria-live="off"></div>
+    </div>
+
+    <div class="method-code">
+      {% include method/algorithms.html %}
+    </div>
+
+  </div>
+  <p class="method-note">
+    Illustrative 2D point-robot example. Region scores, goal samples and path samples are
+    synthetic stand-ins for the learned models, not their outputs.
+  </p>
+</section>
+<script src="{{ '/assets/js/wgr-demo.js' | relative_url }}" defer></script>

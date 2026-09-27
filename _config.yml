@@ -1,0 +1,9 @@
+# Site settings. Paper-specific content lives in _data/paper.yml.
+title: LISWGR
+description: Anonymous project page for LISWGR.
+
+exclude:
+  - others   # local working files (paper PDF, old animation) — never publish
+  - README.md
+  - Gemfile
+  - Gemfile.lock

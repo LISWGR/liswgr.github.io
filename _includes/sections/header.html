@@ -1,0 +1,25 @@
+{%- assign paper = site.data.paper -%}
+<header class="title-block">
+  <div class="venue">{{ paper.short_name }} &nbsp;·&nbsp; {{ paper.venue }}</div>
+  <h1 class="paper-title">{{ paper.title }}</h1>
+  <div class="authors">{{ paper.authors }}</div>
+  {%- if paper.anon_note %}
+  <div class="anon-note">{{ paper.anon_note }}</div>
+  {%- endif %}
+
+  <div class="links-row">
+    {%- for link in paper.links %}
+    {%- if link.url %}
+    <a class="pill" href="{{ link.url }}" target="_blank" rel="noopener">
+      {% include icon.html name=link.icon %}
+      {{ link.label }}
+    </a>
+    {%- else %}
+    <span class="pill disabled">
+      {% include icon.html name=link.icon %}
+      {{ link.label }} — coming soon
+    </span>
+    {%- endif %}
+    {%- endfor %}
+  </div>
+</header>

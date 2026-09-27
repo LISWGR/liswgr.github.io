@@ -1,0 +1,33 @@
+<!-- Title + description shown above the animation for each step. -->
+<div class="demo-head" data-step="1">
+  <div class="demo-kicker">Step 1 · Reachability scoring</div>
+  <h3 class="demo-title">Scoring workspace goal regions</h3>
+  <p class="demo-desc">
+    Each candidate <b>WGR</b> is scored by <i>f</i><sub>ϕ</sub> from the scene embedding
+    <i>z</i><sub>env</sub>. A temperature softmax, mixed with a uniform prior, turns the scores
+    into sampling probabilities <i>p̃</i><sub>i</sub>, which decide how many goal configurations
+    each region receives.
+  </p>
+</div>
+
+<div class="demo-head" data-step="2" hidden>
+  <div class="demo-kicker">Step 2 · Path samples</div>
+  <h3 class="demo-title">Diffusion denoising</h3>
+  <p class="demo-desc">
+    For each goal configuration <i>q</i><sub>g</sub>, a batch of Gaussian-noise sequences is
+    denoised with DDIM into path samples conditioned on <i>q</i><sub>s</sub>, <i>q</i><sub>g</sub>
+    and <i>z</i><sub>env</sub>. Colors mark the goal region each sample leads to. The pooled
+    configurations guide the tree in the next step.
+  </p>
+</div>
+
+<div class="demo-head" data-step="3" hidden>
+  <div class="demo-kicker">Step 3 · Tree expansion</div>
+  <h3 class="demo-title">Growing the tree toward weighted goals</h3>
+  <p class="demo-desc">
+    On a goal-biased iteration the planner takes the highest-weighted goal <i>q</i><sub>g</sub>,
+    extends toward a diffusion sample (<i>X</i>), then tries to extend toward <i>q</i><sub>g</sub>
+    itself (<i>Y</i>). Success <b class="ok">rewards</b> that goal's weight and failure
+    <b class="bad">penalizes</b> it, so exploration shifts to goals that prove reachable.
+  </p>
+</div>

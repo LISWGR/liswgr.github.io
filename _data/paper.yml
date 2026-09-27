@@ -1,0 +1,34 @@
+# Everything that changes from paper to paper lives here.
+# For a new paper: edit this file, then the section files in _includes/sections/.
+
+short_name: LISWGR
+venue: Submission to IEEE Transactions on Automation Science and Engineering
+title: Learning-Informed Motion Planning Toward Scored Workspace Goal Regions for Object Manipulation in Constrained Environments
+authors: Anonymous Author(s)
+anon_note: Anonymous submission — under double-blind review   # leave empty to hide
+
+# Buttons under the title. Leave url empty to show a disabled "coming soon" button.
+# icon: pdf | code | video
+links:
+  - label: Paper (PDF)
+    icon: pdf
+    url:
+  - label: Code
+    icon: code
+    url: https://github.com/LISWGR
+  - label: Video
+    icon: video
+    url:
+
+abstract: >-
+  Replace this paragraph with your paper's abstract. Keep it to a single, self-contained
+  paragraph — no citations, no author-identifying references, no acknowledgements.
+abstract_placeholder: true   # set to false once the real abstract is in
+
+code:
+  url: https://github.com/LISWGR
+  org: LISWGR
+
+footer: |-
+  Anonymous project page — prepared for double-blind review.<br>
+  Replace all bracketed placeholders before submission/upload.

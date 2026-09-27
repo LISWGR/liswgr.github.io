@@ -1,0 +1,65 @@
+<!-- Pseudo-code per step. data-l is the line id the animation highlights; keep them unique per block.
+     Indent with class="i1" / "i2" / "i3". Function names use <span class="fn">. -->
+
+<div class="algo" data-step="1">
+  <div class="algo-cap"><b>Pseudocode</b> — Reachability-aware WGR scoring</div>
+  <div class="algo-req"><b>Require:</b> observation 𝓔 = (<i>x</i><sub>rgb</sub>, <i>x</i><sub>depth</sub>), regions {<i>WGR</i><sub>i</sub>}<sub>i=1</sub><sup>N</sup></div>
+  <ol class="algo-lines">
+    <li data-l="1"><i>z</i><sub>env</sub> ← <span class="fn">Encoder</span>(<i>x</i><sub>rgb</sub>, <i>x</i><sub>depth</sub>)</li>
+    <li data-l="2"><b>for</b> <i>i</i> = 1 … <i>N</i> <b>do</b></li>
+    <li data-l="3" class="i1"><i>s</i><sub>i</sub> ← σ(<span class="fn">head</span><sub>cls</sub>([<i>z</i><sub>env</sub> ‖ <i>WGR</i><sub>i</sub>]))</li>
+    <li data-l="4"><b>end for</b></li>
+    <li data-l="5"><i>p</i><sub>i</sub> ← <span class="fn">softmax</span>(<i>s</i><sub>i</sub> / τ)</li>
+    <li data-l="6"><i>p̃</i><sub>i</sub> ← (1 − α) <i>p</i><sub>i</sub> + α / <i>N</i></li>
+    <li data-l="7"><i>GR</i> ← <span class="fn">GoalRegionSampler</span>({<i>WGR</i><sub>i</sub>}, {<i>p̃</i><sub>i</sub>})</li>
+  </ol>
+</div>
+
+<div class="algo" data-step="2" hidden>
+  <div class="algo-cap"><b>Pseudocode</b> — DDIM path sampling</div>
+  <div class="algo-req"><b>Require:</b> <i>q</i><sub>s</sub>, <i>q</i><sub>g</sub> ← <span class="fn">SampleWeightedGoal</span>(<i>GR</i>), <i>z</i><sub>env</sub></div>
+  <ol class="algo-lines">
+    <li data-l="1"><b>x</b><sub>T</sub> ∼ 𝒩(0, <b>I</b>) <span class="cm">▹ batch of path sequences</span></li>
+    <li data-l="2"><b>for</b> <i>t</i> = <i>T</i>, …, 1 <b>do</b></li>
+    <li data-l="3" class="i1"><i>ε̂</i> ← <i>ε</i><sub>θ</sub>(<b>x</b><sub>t</sub>, <i>t</i> | <i>q</i><sub>s</sub>, <i>q</i><sub>g</sub>, <i>z</i><sub>env</sub>)</li>
+    <li data-l="4" class="i1"><b>x̂</b><sub>0</sub> ← (<b>x</b><sub>t</sub> − √(1−<i>ᾱ</i><sub>t</sub>) <i>ε̂</i>) / √<i>ᾱ</i><sub>t</sub></li>
+    <li data-l="5" class="i1"><b>x</b><sub>t−1</sub> ← √<i>ᾱ</i><sub>t−1</sub> <b>x̂</b><sub>0</sub> + √(1−<i>ᾱ</i><sub>t−1</sub>) <i>ε̂</i></li>
+    <li data-l="6"><b>end for</b></li>
+    <li data-l="7"><i>Q</i> ← configurations of <b>x</b><sub>0</sub> <span class="cm">▹ pooled; <i>q</i><sup>X</sup> is drawn from <i>Q</i></span></li>
+  </ol>
+</div>
+
+<div class="algo" data-step="3" hidden>
+  <div class="algo-cap"><b>Algorithm 1</b> — Learning-informed sampling-based planner with reachability-aware WGR selection</div>
+  <div class="algo-req"><b>Require:</b> start <i>q</i><sub>s</sub>, regions {<i>WGR</i><sub>i</sub>} with scores {<i>s</i><sub>i</sub>}, goal bias β</div>
+  <ol class="algo-lines">
+    <li data-l="1"><i>V</i> ← {<i>q</i><sub>s</sub>}; <i>E</i> ← ∅</li>
+    <li data-l="2">{<i>p</i><sub>i</sub>} ← <span class="fn">ComputeWeights</span>({<i>s</i><sub>i</sub>})</li>
+    <li data-l="3"><i>GR</i> ← <span class="fn">GoalRegionSampler</span>({<i>WGR</i><sub>i</sub>}, {<i>p</i><sub>i</sub>})</li>
+    <li data-l="4"><b>while not</b> <span class="fn">StopCondition</span>() <b>do</b></li>
+    <li data-l="5" class="i1"><b>if</b> <span class="fn">BiasToGoal</span>() <b>then</b></li>
+    <li data-l="6" class="i2"><i>q</i><sub>g</sub> ← <span class="fn">SampleWeightedGoal</span>(<i>GR</i>)</li>
+    <li data-l="7" class="i2"><i>q</i><sup>X</sup><sub>→</sub> ← π<sub>θ</sub>(<i>q</i><sub>t</sub> | <i>q</i><sub>s</sub>, <i>q</i><sub>g</sub>, 𝓔)</li>
+    <li data-l="8" class="i2"><i>goal_biased</i> ← <b>true</b></li>
+    <li data-l="9" class="i1"><b>else</b></li>
+    <li data-l="10" class="i2"><i>q</i><sup>X</sup><sub>→</sub> ← <span class="fn">GenRandomConf</span>()</li>
+    <li data-l="11" class="i2"><i>goal_biased</i> ← <b>false</b></li>
+    <li data-l="12" class="i1"><b>end if</b></li>
+    <li data-l="13" class="i1"><i>q</i><sub>near</sub> ← <span class="fn">Nearest</span>(𝒯, <i>q</i><sup>X</sup><sub>→</sub>)</li>
+    <li data-l="14" class="i1">(<i>q</i><sup>X</sup><sub>new</sub>, <i>s</i><sub>X</sub>) ← <span class="fn">Extend</span>(<i>q</i><sub>near</sub>, <i>q</i><sup>X</sup><sub>→</sub>)</li>
+    <li data-l="15" class="i1"><b>if</b> <i>s</i><sub>X</sub> <b>then</b></li>
+    <li data-l="16" class="i2"><span class="fn">AddNode</span>, <span class="fn">AddEdge</span>(<i>q</i><sub>near</sub>, <i>q</i><sup>X</sup><sub>new</sub>)</li>
+    <li data-l="17" class="i1"><b>end if</b></li>
+    <li data-l="18" class="i1"><b>if</b> <i>goal_biased</i> <b>then</b></li>
+    <li data-l="19" class="i2">(<i>q</i><sup>Y</sup><sub>new</sub>, <i>s</i><sub>Y</sub>) ← <span class="fn">Extend</span>(<i>q</i><sub>near</sub>, <i>q</i><sub>g</sub>)</li>
+    <li data-l="20" class="i2"><b>if</b> <i>s</i><sub>Y</sub> <b>then</b></li>
+    <li data-l="21" class="i3"><span class="fn">AddNode</span>, <span class="fn">AddEdge</span>(<i>q</i><sub>near</sub>, <i>q</i><sup>Y</sup><sub>new</sub>)</li>
+    <li data-l="22" class="i3"><span class="fn">Reward</span>(<i>GR</i>, <i>q</i><sub>g</sub>)</li>
+    <li data-l="23" class="i2"><b>else</b></li>
+    <li data-l="24" class="i3"><span class="fn">Penalize</span>(<i>GR</i>, <i>q</i><sub>g</sub>)</li>
+    <li data-l="25" class="i2"><b>end if</b></li>
+    <li data-l="26" class="i1"><b>end if</b></li>
+    <li data-l="27"><b>end while</b></li>
+    <li data-l="28"><b>return</b> 𝓅 ← <span class="fn">ExtractPath</span>(𝒯)</li>
+  </ol>
+</div>
