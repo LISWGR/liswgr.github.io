@@ -232,10 +232,9 @@
 
     // "Diffusion" samples per goal: feasible paths, plus the noise they are denoised from.
     goals.forEach(function (g) {
-      g.paths = []; g.routes = []; g.noise = []; g.jit = []; g.cloud = [];
+      g.paths = []; g.noise = []; g.jit = []; g.cloud = [];
       samplePaths(env, g, PATHS_PER_GOAL).forEach(function (route) {
         var path = resample(route, PATH_LEN);
-        g.routes.push(route);   // collision-free polyline the waypoints lie on, used to draw the route
         g.paths.push(path);
         g.noise.push(path.map(function () { return { x: 8 + rand() * 84, y: 8 + rand() * 84 }; }));
         g.jit.push(path.map(function () { return { x: gauss() * 7, y: gauss() * 7 }; }));
@@ -470,7 +469,6 @@
           var nz = g.noise[pi][i], jt = g.jit[pi][i];
           return { x: nz.x + (tgt.x - nz.x) * e + jt.x * (1 - e), y: nz.y + (tgt.y - nz.y) * e + jt.y * (1 - e) };
         });
-        if (e > 0.8) polyline(g.routes[pi], color, 1.3 * k, fade * 0.45 * (e - 0.8) / 0.2);   // routes appear once samples settle
         for (var i = 1; i < pts.length - 1; i++) dot(pts[i], 2.2 * k, color, fade * (0.35 + 0.55 * e));
       });
     });
