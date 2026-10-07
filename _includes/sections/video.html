@@ -16,7 +16,7 @@
       <button type="button" data-t="{{ c.t }}"><span class="t">{{ c.t }}</span>{{ c.label }}</button>
       {%- endfor %}
     </div>
-    <script src="{{ '/assets/js/video-chapters.js' | relative_url }}" defer></script>
+    <script src="{{ '/assets/js/video-chapters.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
     {%- endif %}
     {%- elsif video.youtube_id %}
     <div class="video-frame video-embed">
