@@ -2,7 +2,23 @@
 <section class="video" id="video">
   <h2 class="section-title">Video</h2>
   <div class="card">
-    {%- if video.youtube_id %}
+    {%- if video.src %}
+    <div class="video-frame video-embed">
+      <video id="project-video" controls preload="metadata" playsinline
+             {% if video.poster %}poster="{{ video.poster | relative_url }}"{% endif %}
+             aria-label="{{ video.title | default: 'Project video' }}">
+        <source src="{{ video.src | relative_url }}" type="video/mp4">
+      </video>
+    </div>
+    {%- if video.chapters %}
+    <div class="video-chapters" id="video-chapters" aria-label="Video chapters">
+      {%- for c in video.chapters %}
+      <button type="button" data-t="{{ c.t }}"><span class="t">{{ c.t }}</span>{{ c.label }}</button>
+      {%- endfor %}
+    </div>
+    <script src="{{ '/assets/js/video-chapters.js' | relative_url }}" defer></script>
+    {%- endif %}
+    {%- elsif video.youtube_id %}
     <div class="video-frame video-embed">
       <iframe src="https://www.youtube-nocookie.com/embed/{{ video.youtube_id }}?rel=0"
               title="{{ video.title | default: 'Project video' }}"

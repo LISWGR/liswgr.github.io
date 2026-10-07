@@ -43,11 +43,17 @@ code:
   url: https://github.com/LISWGR/LISWGR
   repo: LISWGR/LISWGR
 
-# YouTube video id (the part after watch?v=). Leave empty to show a placeholder.
+# Project video. A self-hosted file (src) takes priority over youtube_id.
+# youtube_id is the part after watch?v=. Leave both empty to show a placeholder.
+# chapters: buttons under the player that jump to a time ("m:ss").
 video:
-  youtube_id: Qg5pN48UHvQ
+  src: /assets/video/liswgr.mp4
+  poster: /assets/video/liswgr-poster.jpg
+  youtube_id:
   title: Project video
-
-footer: |-
-  Anonymous project page — prepared for double-blind review.<br>
-  Replace all bracketed placeholders before submission/upload.
+  chapters:
+    - { t: "0:07", label: Point-like robot (2D) }
+    - { t: "0:26", label: 7-DoF robot (2D) }
+    - { t: "0:48", label: 7-DoF robot in shelf }
+    - { t: "1:45", label: Generalization test }
+    - { t: "1:51", label: Real robot }
