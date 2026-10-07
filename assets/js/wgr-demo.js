@@ -22,8 +22,9 @@
   var TAU = 0.35;            // softmax temperature
   var ALPHA = 0.06;          // uniform mixing
   var TOTAL_GOALS = 36;      // goal configurations drawn across all regions
-  var PATHS_PER_GOAL = 3;    // diffusion batch per goal
-  var PATH_LEN = 10;         // waypoints per path sample
+  var PATHS_PER_GOAL = 4;    // diffusion batch per goal
+  var PATH_LEN = 12;         // waypoints per path sample
+  var ROUTE_GAP = 7;         // min distance between two routes to the same goal to count as distinct
   var DDIM_STEPS = 50;
   var GOAL_BIAS = 0.6;
   var STEP = 4.5;            // tree extension step
@@ -75,7 +76,8 @@
   /* ================= planners used to fake the learned samples ================= */
 
   function planRRT(env, goal, opt) {
-    var nodes = [{ x: env.start.x, y: env.start.y, parent: -1 }], goalIndex = -1;
+    var from = opt.from || env.start;
+    var nodes = [{ x: from.x, y: from.y, parent: -1 }], goalIndex = -1;
     for (var it = 0; it < opt.maxIter; it++) {
       var q = rand() < opt.goalBias ? goal : randFree(env);
       var ni = 0, nd = Infinity;
@@ -102,10 +104,10 @@
   }
   // Never fabricate a straight segment through obstacles: if no attempt reached the goal,
   // stop at the node nearest to it and only append the goal if that hop is collision-free.
-  function pathTo(env, goal) {
+  function pathTo(env, goal, from) {
     var best = null;
     for (var a = 0; a < 6; a++) {
-      var r = planRRT(env, goal, { goalBias: 0.3, maxIter: 1400, goalDist: 4 });
+      var r = planRRT(env, goal, { goalBias: 0.3, maxIter: 1400, goalDist: 4, from: from });
       if (r.goalIndex >= 0) return extract(r.nodes, r.goalIndex);
       if (!best) best = r;
     }
@@ -148,6 +150,51 @@
     return out;
   }
 
+  function pathLength(path) {
+    var l = 0;
+    for (var i = 1; i < path.length; i++) l += dist(path[i - 1], path[i]);
+    return l;
+  }
+  // Discrete Hausdorff distance between two routes.
+  function routeGap(a, b) {
+    a = resample(a, 24); b = resample(b, 24);
+    function far(p, q) {
+      var m = 0;
+      p.forEach(function (u) {
+        var d = Infinity;
+        q.forEach(function (v) { d = Math.min(d, dist(u, v)); });
+        m = Math.max(m, d);
+      });
+      return m;
+    }
+    return Math.max(far(a, b), far(b, a));
+  }
+  // One short RRT attempt; null if it does not reach the target.
+  function quickPath(env, goal, from) {
+    var r = planRRT(env, goal, { goalBias: 0.3, maxIter: 500, goalDist: 4, from: from });
+    return r.goalIndex >= 0 ? extract(r.nodes, r.goalIndex) : null;
+  }
+  // The diffusion model is multimodal: samples for the same goal follow different routes.
+  // The first sample is the shortest route found; the others are forced through a random
+  // via-point and kept only if they reach the goal, stay reasonably short, and differ from
+  // every route already in the batch.
+  function samplePaths(env, goal, n) {
+    var routes = [shortcut(pathTo(env, goal), env)];
+    var maxLen = 1.8 * pathLength(routes[0]) + 10;
+    for (var t = 0; t < 40 && routes.length < n; t++) {
+      var via = randFree(env);
+      if (dist(env.start, via) + dist(via, goal) > maxLen) continue;   // detour too long anyway
+      var a = quickPath(env, via, env.start), b = quickPath(env, goal, via);
+      if (!a || !b) continue;
+      var r = shortcut(a.concat(b.slice(1)), env);
+      if (pathLength(r) > maxLen) continue;
+      if (routes.some(function (q) { return routeGap(q, r) < ROUTE_GAP; })) continue;
+      routes.push(r);
+    }
+    for (var i = 0; routes.length < n; i++) routes.push(routes[i]);   // too few distinct routes: repeat
+    return routes;
+  }
+
   /* ================= scene ================= */
 
   function buildScene() {
@@ -185,15 +232,16 @@
 
     // "Diffusion" samples per goal: feasible paths, plus the noise they are denoised from.
     goals.forEach(function (g) {
-      g.paths = []; g.noise = []; g.jit = []; g.cloud = [];
-      for (var k = 0; k < PATHS_PER_GOAL; k++) {
-        var path = resample(shortcut(pathTo(env, g), env), PATH_LEN);
+      g.paths = []; g.routes = []; g.noise = []; g.jit = []; g.cloud = [];
+      samplePaths(env, g, PATHS_PER_GOAL).forEach(function (route) {
+        var path = resample(route, PATH_LEN);
+        g.routes.push(route);   // collision-free polyline the waypoints lie on, used to draw the route
         g.paths.push(path);
         g.noise.push(path.map(function () { return { x: 8 + rand() * 84, y: 8 + rand() * 84 }; }));
         g.jit.push(path.map(function () { return { x: gauss() * 7, y: gauss() * 7 }; }));
         // bias toward the goal end so a goal-biased X step actually pulls toward this goal
         for (var i = Math.ceil(PATH_LEN / 2); i < PATH_LEN; i++) g.cloud.push(path[i]);
-      }
+      });
     });
 
     return { env: env, regions: regions, goals: goals, tree: simulateTree(env, regions, goals) };
@@ -411,9 +459,9 @@
     drawStart();
   }
 
-  function drawStep2(p) {
-    var e = ease(clamp01((p - 0.12) / 0.8));
-    scene.regions.forEach(function (r) { drawRegion(r, 1, 1); });
+  // Path samples at denoising progress e (0 = noise, 1 = x_0). Step 3 redraws the finished
+  // samples (e = 1) faded, so the tree is visibly guided by the same samples as step 2.
+  function drawSamples(e, fade) {
     scene.goals.forEach(function (g) {
       var color = scene.regions[g.region].color;
       g.paths.forEach(function (path, pi) {
@@ -422,9 +470,16 @@
           var nz = g.noise[pi][i], jt = g.jit[pi][i];
           return { x: nz.x + (tgt.x - nz.x) * e + jt.x * (1 - e), y: nz.y + (tgt.y - nz.y) * e + jt.y * (1 - e) };
         });
-        for (var i = 1; i < pts.length - 1; i++) dot(pts[i], 2.2 * k, color, 0.35 + 0.55 * e);
+        if (e > 0.8) polyline(g.routes[pi], color, 1.3 * k, fade * 0.45 * (e - 0.8) / 0.2);   // routes appear once samples settle
+        for (var i = 1; i < pts.length - 1; i++) dot(pts[i], 2.2 * k, color, fade * (0.35 + 0.55 * e));
       });
     });
+  }
+
+  function drawStep2(p) {
+    var e = ease(clamp01((p - 0.12) / 0.8));
+    scene.regions.forEach(function (r) { drawRegion(r, 1, 1); });
+    drawSamples(e, 1);
     scene.goals.forEach(function (g) { square(g, 3 * k, scene.regions[g.region].color, 1); });
     drawStart();
     return Math.round(DDIM_STEPS * (1 - e));
@@ -437,10 +492,7 @@
     var topIdx = cur ? cur.top : 0;
 
     scene.regions.forEach(function (r) { drawRegion(r, 1, 1); });
-    scene.goals.forEach(function (g) {                       // pooled diffusion samples, faint
-      var c = scene.regions[g.region].color;
-      g.cloud.forEach(function (q) { dot(q, 1.5 * k, c, 0.22); });
-    });
+    drawSamples(1, 0.35);                                    // the step-2 samples, faded
 
     ctx.lineWidth = 1.8 * k;
     ctx.lineCap = 'round';
