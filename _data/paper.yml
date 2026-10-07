@@ -55,5 +55,5 @@ video:
     - { t: "0:07", label: Point-like robot (2D) }
     - { t: "0:26", label: 7-DoF robot (2D) }
     - { t: "0:48", label: 7-DoF robot in shelf }
-    - { t: "1:45", label: Generalization test }
+    - { t: "1:47", label: Generalization test }
     - { t: "1:51", label: Real robot }
