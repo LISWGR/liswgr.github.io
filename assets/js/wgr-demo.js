@@ -206,12 +206,10 @@
     var maxS = Math.max.apply(null, regions.map(function (r) { return r.score; }));
     var exps = regions.map(function (r) { return Math.exp((r.score - maxS) / TAU); });
     var sum = exps.reduce(function (a, b) { return a + b; }, 0);
-    var maxP = 0;
     regions.forEach(function (r, i) {
       r.p = exps[i] / sum;
       r.pMix = (1 - ALPHA) * r.p + ALPHA / regions.length;
       r.nGoals = Math.max(1, Math.round(r.pMix * TOTAL_GOALS));
-      maxP = Math.max(maxP, r.pMix);
     });
 
     var goals = [];
@@ -225,21 +223,21 @@
       r.goals.forEach(function (g) {
         g.region = ri;
         g.index = goals.length;
-        g.weight0 = r.pMix / maxP;   // ComputeWeights: queue starts from the mixed probabilities
+        g.weight0 = 1;               // every goal enters the queue at weight 1; scores only set how many goals a region gets
         goals.push(g);
       });
     });
 
     // "Diffusion" samples per goal: feasible paths, plus the noise they are denoised from.
     goals.forEach(function (g) {
-      g.paths = []; g.noise = []; g.jit = []; g.cloud = [];
+      g.paths = []; g.noise = []; g.jit = []; g.seq = [];
       samplePaths(env, g, PATHS_PER_GOAL).forEach(function (route) {
         var path = resample(route, PATH_LEN);
         g.paths.push(path);
         g.noise.push(path.map(function () { return { x: 8 + rand() * 84, y: 8 + rand() * 84 }; }));
         g.jit.push(path.map(function () { return { x: gauss() * 7, y: gauss() * 7 }; }));
-        // bias toward the goal end so a goal-biased X step actually pulls toward this goal
-        for (var i = Math.ceil(PATH_LEN / 2); i < PATH_LEN; i++) g.cloud.push(path[i]);
+        // the batch is flattened path by path; the planner walks this list in order
+        path.forEach(function (q) { g.seq.push(q); });
       });
     });
 
@@ -251,6 +249,7 @@
     var weights = goals.map(function (g) { return g.weight0; });
     var nodes = [{ x: env.start.x, y: env.start.y, parent: -1 }];
     var iters = [], solvedNode = -1;
+    var cursor = goals.map(function () { return 0; });   // next diffusion sample per goal
 
     function top() {
       var b = 0;
@@ -274,6 +273,12 @@
       nodes.push({ x: p.x, y: p.y, parent: ni });
       return nodes.length - 1;
     }
+    // Y: one straight connection all the way to the target, no step limit; all or nothing.
+    function connect(ni, target) {
+      if (collSeg(nodes[ni], target, env)) return null;
+      nodes.push({ x: target.x, y: target.y, parent: ni });
+      return nodes.length - 1;
+    }
     function solves(idx) {
       for (var r = 0; r < regions.length; r++) if (inBox(nodes[idx], regions[r])) return true;
       return false;
@@ -283,13 +288,14 @@
       var biased = rand() < GOAL_BIAS, gi = -1, target;
       if (biased) {
         gi = top();
-        var cloud = goals[gi].cloud;
-        target = cloud[(rand() * cloud.length) | 0];       // q^X from the diffusion samples
+        var seq = goals[gi].seq;
+        target = seq[cursor[gi]];                         // q^X: this goal's next diffusion sample, in order
+        cursor[gi] = (cursor[gi] + 1) % seq.length;
       } else {
         target = randFree(env);                           // GenRandomConf
       }
       var ni = nearest(target);
-      var rec = { biased: biased, goal: gi, added: [], xOk: false, yOk: false };
+      var rec = { biased: biased, goal: gi, target: biased ? target : null, added: [], xOk: false, yOk: false };
 
       var xi = extend(ni, target);
       if (xi != null) {
@@ -297,7 +303,7 @@
         if (solves(xi)) solvedNode = xi;
       }
       if (biased) {
-        var yi = extend(ni, goals[gi]);                   // Y reuses the same q_near
+        var yi = connect(ni, goals[gi]);                  // Y reuses the same q_near
         var w = weights[gi];
         if (yi != null) {
           rec.yOk = true; rec.added.push(yi);
@@ -305,6 +311,7 @@
           weights[gi] = Math.min(1, w < 1 ? w / (1 - w) : 1);   // Reward
         } else {
           weights[gi] = w / (w + 1);                            // Penalize
+          if (w < 0.2) for (var j = 0; j < weights.length; j++) weights[j] = 0.5;   // all goals weak: reset
         }
       }
       rec.weights = weights.slice();
@@ -491,6 +498,15 @@
 
     scene.regions.forEach(function (r) { drawRegion(r, 1, 1); });
     drawSamples(1, 0.35);                                    // the step-2 samples, faded
+    if (cur && cur.biased && n < tree.iters.length) {        // this iteration's q^X, taken in order
+      ctx.save();
+      ctx.strokeStyle = scene.regions[scene.goals[cur.goal].region].color;
+      ctx.lineWidth = 2 * k;
+      ctx.beginPath();
+      ctx.arc(cur.target.x * S, cur.target.y * S, 6 * k, 0, 7);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     ctx.lineWidth = 1.8 * k;
     ctx.lineCap = 'round';

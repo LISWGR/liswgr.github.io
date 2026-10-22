@@ -26,9 +26,10 @@
   <div class="demo-kicker">Step 3 · Tree expansion</div>
   <h3 class="demo-title">Growing the tree toward weighted goals</h3>
   <p class="demo-desc">
-    On a goal-biased iteration the planner takes the highest-weighted goal <i>q</i><sub>g</sub>,
-    extends toward a diffusion sample (<i>X</i>), then tries to extend toward <i>q</i><sub>g</sub>
-    itself (<i>Y</i>). Success <b class="ok">rewards</b> that goal's weight and failure
+    On a goal-biased iteration the planner takes the highest-weighted goal <i>q</i><sub>g</sub>
+    and extends one step toward the next of its diffusion samples, taken in order (<i>X</i>,
+    circled). It then tries to connect straight to <i>q</i><sub>g</sub> in a single move
+    (<i>Y</i>). Success <b class="ok">rewards</b> that goal's weight and failure
     <b class="bad">penalizes</b> it, so exploration shifts to goals that prove reachable.
   </p>
 </div>
