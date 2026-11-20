@@ -5,9 +5,9 @@
     {%- if video.src %}
     <div class="video-frame video-embed">
       <video id="project-video" controls preload="metadata" playsinline
-             {% if video.poster %}poster="{{ video.poster | relative_url }}"{% endif %}
+             {% if video.poster %}poster="{{ video.poster | relative_url }}?v={{ site.time | date: '%s' }}"{% endif %}
              aria-label="{{ video.title | default: 'Project video' }}">
-        <source src="{{ video.src | relative_url }}" type="video/mp4">
+        <source src="{{ video.src | relative_url }}?v={{ site.time | date: '%s' }}" type="video/mp4">
       </video>
     </div>
     {%- if video.chapters %}
